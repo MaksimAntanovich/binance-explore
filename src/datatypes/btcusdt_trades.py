@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import datetime
 from functools import reduce
 from typing import List
 
+import pandas as pd
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import lit
-from pyspark.sql.types import StructType, StructField, LongType, DoubleType, TimestampType, BooleanType
+from pyspark.sql.types import StructType, StructField, LongType, DoubleType, BooleanType
 
 
 class BtcUsdtTrades:
@@ -14,7 +15,7 @@ class BtcUsdtTrades:
         StructField("price", DoubleType(), False),
         StructField("qty", DoubleType(), False),
         StructField("quoteQty", DoubleType(), False),
-        StructField("time", TimestampType(), False),
+        StructField("time", LongType(), False),
         StructField("isBuyerMaker", BooleanType(), False),
         StructField("isBestMatch", BooleanType(), False),
     ])
@@ -22,14 +23,15 @@ class BtcUsdtTrades:
     def __init__(self, spark: SparkSession):
         self.spark = spark
 
-    def load(self, dates: List[date]):
+    def load(self, dates: List[datetime]):
         return reduce(lambda df1, df2: df1.unionByName(df2), [
             self.__read_date(_date) for _date in dates
         ]).checkpoint()
 
-    def __csv_path(self, _date: date):
+    def __csv_path(self, _date: datetime):
         return f"data/BTCUSDT-trades-{_date.strftime('%Y-%m-%d')}.zip"
 
-    def __read_date(self, _date: date):
-        df = self.spark.read.csv(self.__csv_path(_date), schema=self.schema, header=False)
+    def __read_date(self, _date: datetime):
+        zipped_file_path = self.__csv_path(_date)
+        df = self.spark.createDataFrame(pd.read_csv(zipped_file_path, header=None, names=self.schema.names), schema=self.schema)
         return df.withColumn("date", lit(_date.date()))

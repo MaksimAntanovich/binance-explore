@@ -6,9 +6,6 @@ from src.jobs.job import Job
 
 class SimpleJob(Job):
 
-    input = None
-    output = None
-
     def extract(self):
         self.input = BtcUsdtTrades(self.spark).load(self.job_context.date_range).cache()
 
