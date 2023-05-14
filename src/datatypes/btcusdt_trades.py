@@ -3,6 +3,7 @@ from functools import reduce
 from typing import List
 
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import lit
 from pyspark.sql.types import StructType, StructField, LongType, DoubleType, TimestampType, BooleanType
 
 
@@ -23,8 +24,12 @@ class BtcUsdtTrades:
 
     def load(self, dates: List[date]):
         return reduce(lambda df1, df2: df1.unionByName(df2), [
-            self.spark.read.csv(self.__csv_path(_date), schema=self.schema, header=False) for _date in dates
+            self.__read_date(_date) for _date in dates
         ]).checkpoint()
 
     def __csv_path(self, _date: date):
         return f"data/BTCUSDT-trades-{_date.strftime('%Y-%m-%d')}.zip"
+
+    def __read_date(self, _date: date):
+        df = self.spark.read.csv(self.__csv_path(_date), schema=self.schema, header=False)
+        return df.withColumn("date", lit(_date.date()))

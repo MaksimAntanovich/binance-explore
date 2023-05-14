@@ -1,16 +1,24 @@
-import logging
-from datetime import date
+from pyspark.sql.functions import count, lit
 
 from src.datatypes.btcusdt_trades import BtcUsdtTrades
 from src.jobs.job import Job
 
 
 class SimpleJob(Job):
+
+    input = None
+    output = None
+
     def extract(self):
-        self.data = BtcUsdtTrades(self.spark).load([date(2023, 4, 1)])
+        self.input = BtcUsdtTrades(self.spark).load(self.job_context.date_range).cache()
 
     def transform(self):
-        self.rowcount = self.data.count()
+        if self.input is None:
+            self.extract()
+        self.output = self.input.groupBy("date").agg(count(lit(1)))
+        return self.output
 
     def load(self):
-        logging.info(f"{self.rowcount} BTC/USDT trades")
+        if self.output is None:
+            self.transform()
+        self.output.write.csv("output/row_count_by_date.csv")
