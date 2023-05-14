@@ -15,6 +15,8 @@ class JobContext:
             .appName(self.job)
             .getOrCreate()
         )
+        self.spark.sparkContext.setLogLevel(self.config["job"]["loglevel"])
+        self.spark.sparkContext.setCheckpointDir("/tmp/checkpoints")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

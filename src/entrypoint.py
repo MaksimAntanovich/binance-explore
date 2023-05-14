@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 from pyhocon import ConfigFactory
 
@@ -12,6 +13,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     config = ConfigFactory.parse_file(args.config)
+
+    logging.root.setLevel(config["job"]["loglevel"])
+
     with JobContext(config, args.job) as job_context:
         job = NAME_TO_JOB[args.job](job_context)
         job.extract()
