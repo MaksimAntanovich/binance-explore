@@ -15,6 +15,7 @@ class JobContext:
             SparkSession
             .builder
             .appName(self.job)
+            .config('spark.sql.session.timeZone', 'UTC')
             .getOrCreate()
         )
         spark.sparkContext.setLogLevel(self.config["job"]["loglevel"])
