@@ -29,7 +29,7 @@ class BtcUsdtTrades:
         ]).checkpoint()
 
     def __csv_path(self, _date: datetime):
-        return f"data/BTCUSDT-trades-{_date.strftime('%Y-%m-%d')}.zip"
+        return f"data/spot/BTCUSDT-trades-{_date.strftime('%Y-%m-%d')}.zip"
 
     def __read_date(self, _date: datetime):
         zipped_file_path = self.__csv_path(_date)
